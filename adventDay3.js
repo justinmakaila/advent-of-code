@@ -4,11 +4,10 @@ const fs = require('fs');
 const priorityIndex = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 const itemPriority = (itemType) => priorityIndex.indexOf(itemType) + 1
 
-const input = fs.readFileSync('./input/day3.txt', 'utf-8')
+const inputs = fs.readFileSync('./input/day3.txt', 'utf-8').split("\n")
+const numberOfInputs = inputs.length;
 
 const ELVES_PER_GROUP = 3
-const inputs = input.split("\n")
-const numberOfInputs = inputs.length;
 
 const numberOfGroups = numberOfInputs / ELVES_PER_GROUP;
 
@@ -54,7 +53,7 @@ const priorityByIndex = []
 for (var i = 0; i < inputs.length; i++) {
   const contents = inputs[i];
   const contentsLength = contents.length
-  const compartmentLength = contents.length / 2
+  const compartmentLength = contentsLength / 2
 
   const compartmentAContents = contents.slice(0, compartmentLength)
   const compartmentBContents = contents.slice(compartmentLength, contentsLength)
