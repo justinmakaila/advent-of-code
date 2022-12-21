@@ -1,10 +1,7 @@
 #!/usr/bin/node
 const fs = require('fs');
 
-const input = fs.readFileSync('./input/day1.txt', {
-  encoding: "utf-8",
-  flag: "r"
-}).split(/\n\n/);
+const input = fs.readFileSync('./input/day1.txt', 'utf-8').split(/\n\n/);
 
 const calorieCountByElf = input
   .map((group) => {
