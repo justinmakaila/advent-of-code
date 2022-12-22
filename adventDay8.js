@@ -83,10 +83,7 @@ console.log(visibleCoordinates.length);
 
 const scenicScores = grid
   .map((row, columnIndex, source) => row
-    .map((_, rowIndex) => {
-      const score = getViewScore({ x: rowIndex, y: columnIndex }, source);
-      return score;
-    })
+    .map((_, rowIndex) => getViewScore({ x: rowIndex, y: columnIndex }, source))
   )
   .flat();
 
