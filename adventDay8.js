@@ -3,66 +3,93 @@ const fs = require('fs');
 
 const input = fs.readFileSync('./input/day8.txt', 'utf-8');
 
-const getSurroundingTreesForCoordinates = ({ x, y }) => [
-  {
-    y: y - 1,
-    x
-  },
-  {
-    y: y + 1,
-    x
-  }, 
-  {
-    x: x - 1,
-    y
-  },
-  {
-    x: x + 1,
-    y
+const DIRECTIONS = ["UP", "DOWN", "LEFT", "RIGHT"];
+
+const translateCoordinate = ({x, y}, direction) => {
+  switch (direction) {
+    case "UP":
+      return { x, y: y - 1 }
+    case "DOWN":
+      return { x, y: y + 1 }
+    case "LEFT":
+      return { y, x: x - 1,}
+    case "RIGHT":
+      return { y, x: x + 1}
+    default:
+      throw new Error(`Invalid direction supplied: ${direction}. Must be one of "UP", "DOWN", "LEFT", or "RIGHT".`)
   }
-]
+}
 
 const isCoordinateInGrid = ({ x, y }, { width, height }) => x >= 0 && x < height && y >= 0 && y < width;
-const isCoordinateNearEdge = ({ x, y }, { width, height }) => (y === height - 1 || y === 1) || (x === width - 1 || x === 1);
+
+function* treesInDirection({ x, y }, direction, grid) {
+  const nextCoordinate = translateCoordinate({ x, y }, direction);
+
+  if (isCoordinateInGrid(nextCoordinate, {
+    width: grid[0].length,
+    height: grid.length
+  })) {
+    yield grid[nextCoordinate.y][nextCoordinate.x];
+  } else {
+    return;
+  }
+
+  yield* treesInDirection(nextCoordinate, direction, grid);
+}
+
+const isVisible = ({x, y}, grid) => {
+  const treeValue = grid[y][x];
+  return DIRECTIONS
+    .some((direction) => [...treesInDirection({ x, y }, direction, grid)]
+      .every((surroundingTree) => surroundingTree < treeValue)
+    )
+}
+
+const getViewScore = ({x, y}, grid) => {
+  const treeValue = grid[y][x];
+  return DIRECTIONS
+    .map((direction) => {
+      const trees = [...treesInDirection({x, y}, direction, grid)]
+      const index = trees
+        .findIndex((surroundingTree) => surroundingTree >= treeValue)
+
+      return index > -1 
+        ? return index + 1 
+        : trees.length
+    })
+    .reduce((score, value) => score * value)
+}
   
 const grid = input
   .trim()
   .split('\n')
-  .reduce((grid, line) => {
-    return [
+  .reduce((grid, line) => [
       ...grid,
       [...line.trim()]
         .map((treeHeight) => parseInt(treeHeight))
-    ]
-  }, []);
+  ], [])
 
-const gridHeight = grid.length,
-  gridWidth = grid[0].length,
-  gridContext = { width: gridWidth, height: gridHeight },
-  totalNumberOfTrees = gridHeight * gridWidth;
-
-const validCoordinates = grid
-  .map((row, columnIndex) => row
-    .reduce((coordinates, tree, rowIndex) => {
+const visibleCoordinates = grid
+  .map((row, columnIndex, source) => row
+    .reduce((coordinates, _, rowIndex) => {
       const coordinate = { x: rowIndex, y: columnIndex }
-      const surroundingTrees = getSurroundingTreesForCoordinates(coordinate)
-      const isValid = surroundingTrees.every((coordinate) => isCoordinateInGrid(coordinate, gridContext)) 
-      return isValid ? [...coordinates, [coordinate, surroundingTrees.filter((coordinate) => isCoordinateNearEdge(coordinate, gridContext))]] : coordinates
+      return isVisible(coordinate, source) ? [...coordinates, coordinate] : coordinates;
     }, [])
   )
   .flat();
 
-const hiddenTreeCoordinates = validCoordinates.filter(([{ x, y }, surroundingTrees]) => {
-  const tree = grid[y][x];
-  return surroundingTrees.every((surroundingCoordinate) => {
-    const surroundingTree = grid[surroundingCoordinate.y][surroundingCoordinate.x];
-    const isTreeHidden = surroundingTree >= tree;
-    return isTreeHidden;
-  });
-});
+// Part 1
+console.log(visibleCoordinates.length);
 
-const numberOfHiddenTrees = hiddenTreeCoordinates.length;
-const numberOfVisibleTrees = totalNumberOfTrees - numberOfHiddenTrees;
+const scenicScores = grid
+  .map((row, columnIndex, source) => row
+    .map((_, rowIndex) => {
+      const score = getViewScore({ x: rowIndex, y: columnIndex }, source);
+      return score;
+    })
+  )
+  .flat();
 
-console.log(numberOfVisibleTrees)
+// Part 2
+console.log(scenicScores.sort((a, b) => a - b).pop());
 
