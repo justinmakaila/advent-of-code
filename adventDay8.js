@@ -49,13 +49,16 @@ const getViewScore = ({x, y}, grid) => {
   const treeValue = grid[y][x];
   return DIRECTIONS
     .map((direction) => {
-      const trees = [...treesInDirection({x, y}, direction, grid)]
-      const index = trees
-        .findIndex((surroundingTree) => surroundingTree >= treeValue)
+      let treeDistance = 1;
+      for (var tree of treesInDirection({x, y}, direction, grid)) {
+        if (tree >= treeValue) {
+          break;
+        }
 
-      return index > -1 
-        ? return index + 1 
-        : trees.length
+        treeDistance++;
+      }
+
+      return treeDistance;
     })
     .reduce((score, value) => score * value)
 }
